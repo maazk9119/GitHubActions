@@ -1,19 +1,28 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
-WORKDIR /TestingApp
+version: '3.4'
 
-# Copy everything
-COPY . ./
+networks:
+  Rakaposhi-network:
 
-# Restore as distinct layers
-RUN dotnet restore
-
-# Build and publish a release
-RUN dotnet publish -c Release -o out
-
-# Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
-
-WORKDIR /TestingApp
-COPY --from=build-env /TestingApp/out .
-
-ENTRYPOINT ["dotnet", "TestingApp.dll"]
+services:
+  rakaposhiapp:
+    image: rakaposhi
+    environment:
+    - ASPNETCORE_ENVIRONMENT=Development
+    - DB_NAME=ParbatDB
+    - DB_PASSWORD=MyPass@1234
+    - DB_SERVER=db
+    - DB_USERNAME=sa
+    - DB_TYPE=SQL
+    - TRUSTED=False
+    build:
+      context: ./TestingApp/
+      dockerfile: Dockerfile
+    ports:
+    - "8081:80"
+    networks:
+      - Rakaposhi-network
+    volumes:
+      - rakaposhi-mssqldata:/var/opt/mssql
+      
+volumes:
+    rarbat-mssqldata:
